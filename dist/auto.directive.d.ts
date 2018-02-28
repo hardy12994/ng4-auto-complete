@@ -1,0 +1,32 @@
+import { ElementRef, Renderer2, OnInit, EventEmitter } from "@angular/core";
+import { NgControl } from "@angular/forms";
+export declare class AutoCompleteDirective implements OnInit {
+    elemRef: ElementRef;
+    renderer: Renderer2;
+    reactiveFormControl: NgControl;
+    ngModelChange: EventEmitter<{}>;
+    valueChanged: EventEmitter<{}>;
+    noRecordPlaceHolder: string;
+    filterName: string;
+    listlength: number;
+    listType: string;
+    list: Array<any>;
+    wordTrigger: number;
+    listShown: any;
+    inpRef: any;
+    dropdownInitiated: boolean;
+    constructor(elemRef: ElementRef, renderer: Renderer2, reactiveFormControl: NgControl);
+    ngOnInit(): void;
+    autoComplete: any;
+    openOnWordLength: number;
+    listLengthToShow: number;
+    filterIdentity: string;
+    noRecordText: string;
+    configureListType(): void;
+    configureDirective(): void;
+    filterList(): any;
+    initDropdown(list?: any): void;
+    searchfromList(ui: any): any;
+    activateEvents(): void;
+    removeOldList(): void;
+}
