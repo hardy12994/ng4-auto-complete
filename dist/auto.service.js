@@ -2,6 +2,8 @@ import { Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 var AutoCompleteService = /** @class */ (function () {
     function AutoCompleteService() {
+        this.listlength = 15;
+        this.dataPresent = false;
         this.list = [];
         this.settingDynamicList = new BehaviorSubject(false);
     }

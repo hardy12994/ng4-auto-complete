@@ -7,6 +7,14 @@ export class AutoCompleteService {
     list: Array<any>;
     settingDynamicList: BehaviorSubject<boolean>;
 
+
+    noRecordPlaceHolder: string;
+    filterName: string;
+    listlength: number = 15;
+    wordTrigger: number;
+    dataPresent: boolean = false;
+
+
     constructor() {
         this.list = [];
         this.settingDynamicList = new BehaviorSubject(false);

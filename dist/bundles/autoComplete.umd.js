@@ -6,6 +6,8 @@
 
 var AutoCompleteService = /** @class */ (function () {
     function AutoCompleteService() {
+        this.listlength = 15;
+        this.dataPresent = false;
         this.list = [];
         this.settingDynamicList = new rxjs.BehaviorSubject(false);
     }
@@ -37,17 +39,34 @@ var AutoCompleteDirective = /** @class */ (function () {
         this.dropdownInitiated = false;
         this.inpRef = elemRef.nativeElement;
         this.renderer.setAttribute(this.inpRef, "spellcheck", "false");
+        this.getDataFromService();
         this.activateEvents();
     }
     AutoCompleteDirective.prototype.ngOnInit = function () {
         this.configureListType();
         this.configureDirective();
     };
+    AutoCompleteDirective.prototype.getDataFromService = function () {
+        if (this.autoCompleteService.dataPresent) {
+            this.list = this.autoCompleteService.list;
+            this.wordTrigger = this.autoCompleteService.wordTrigger;
+            this.listlength = this.autoCompleteService.listlength;
+            this.filterName = this.autoCompleteService.filterName;
+            this.noRecordPlaceHolder = this.autoCompleteService.noRecordPlaceHolder;
+        }
+    };
     Object.defineProperty(AutoCompleteDirective.prototype, "autoComplete", {
         set: function (list) {
             this.list = list ? (list.length ? list : []) : [];
             if (this.list.length === 0) {
                 console.log('static list found empty');
+            }
+            if (list != undefined || list != null) {
+                this.autoCompleteService.list = list;
+                this.autoCompleteService.dataPresent = true;
+            }
+            else {
+                this.list = this.autoCompleteService.list;
             }
         },
         enumerable: true,
@@ -56,6 +75,14 @@ var AutoCompleteDirective = /** @class */ (function () {
     Object.defineProperty(AutoCompleteDirective.prototype, "openOnWordLength", {
         set: function (word_trigger) {
             this.wordTrigger = Number(word_trigger);
+            this.autoCompleteService.wordTrigger = this.wordTrigger;
+            if (word_trigger != undefined || word_trigger != null) {
+                this.autoCompleteService.wordTrigger = Number(word_trigger);
+                this.autoCompleteService.dataPresent = true;
+            }
+            else {
+                this.wordTrigger = this.autoCompleteService.wordTrigger;
+            }
         },
         enumerable: true,
         configurable: true
@@ -63,6 +90,13 @@ var AutoCompleteDirective = /** @class */ (function () {
     Object.defineProperty(AutoCompleteDirective.prototype, "listLengthToShow", {
         set: function (listlength) {
             this.listlength = Number(listlength);
+            if (listlength != undefined || listlength != null) {
+                this.autoCompleteService.listlength = Number(listlength);
+                this.autoCompleteService.dataPresent = true;
+            }
+            else {
+                this.listlength = this.autoCompleteService.listlength;
+            }
         },
         enumerable: true,
         configurable: true
@@ -70,6 +104,13 @@ var AutoCompleteDirective = /** @class */ (function () {
     Object.defineProperty(AutoCompleteDirective.prototype, "filterIdentity", {
         set: function (filterName) {
             this.filterName = filterName;
+            if (filterName != undefined || filterName != null) {
+                this.autoCompleteService.filterName = filterName;
+                this.autoCompleteService.dataPresent = true;
+            }
+            else {
+                this.filterName = this.autoCompleteService.filterName;
+            }
         },
         enumerable: true,
         configurable: true
@@ -77,6 +118,13 @@ var AutoCompleteDirective = /** @class */ (function () {
     Object.defineProperty(AutoCompleteDirective.prototype, "noRecordText", {
         set: function (defaultText) {
             this.noRecordPlaceHolder = defaultText;
+            if (defaultText != undefined || defaultText != null) {
+                this.autoCompleteService.noRecordPlaceHolder = defaultText;
+                this.autoCompleteService.dataPresent = true;
+            }
+            else {
+                this.noRecordPlaceHolder = this.autoCompleteService.noRecordPlaceHolder;
+            }
         },
         enumerable: true,
         configurable: true
@@ -122,6 +170,50 @@ var AutoCompleteDirective = /** @class */ (function () {
         }
         return that.listShown;
     };
+    AutoCompleteDirective.prototype.autoCompleteSelect = function (ui) {
+        var that = this;
+        var dataFromList = that.searchfromList(ui);
+        //for ngmodule                
+        if (dataFromList) {
+            that.ngModelChange.emit(ui.item.value);
+            that.valueChanged.emit(ui.item.value);
+        }
+        else {
+            that.ngModelChange.emit("");
+            that.valueChanged.emit("");
+        }
+        // for Rectiveforms model
+        if (that.reactiveFormControl) {
+            if (dataFromList) {
+                that.reactiveFormControl.control.setValue(ui.item.value);
+            }
+            else {
+                that.reactiveFormControl.control.setValue("");
+            }
+        }
+    };
+    AutoCompleteDirective.prototype.autoCompleteChange = function (ui) {
+        var that = this;
+        var dataFromList = that.searchfromList(ui);
+        //for ngmodule
+        if (dataFromList) {
+            that.ngModelChange.emit(that.elemRef.nativeElement["value"]);
+            that.valueChanged.emit(that.elemRef.nativeElement["value"]);
+        }
+        else {
+            that.ngModelChange.emit("");
+            that.valueChanged.emit("");
+        }
+        // for Rectiveforms model
+        if (that.reactiveFormControl) {
+            if (dataFromList) {
+                that.reactiveFormControl.control.setValue(that.elemRef.nativeElement["value"]);
+            }
+            else {
+                that.reactiveFormControl.control.setValue("");
+            }
+        }
+    };
     AutoCompleteDirective.prototype.initDropdown = function (list) {
         var _this = this;
         if (list === void 0) { list = undefined; }
@@ -137,6 +229,12 @@ var AutoCompleteDirective = /** @class */ (function () {
                     response(that.listShown, function (val) {
                         console.log(val);
                     });
+                },
+                change: function (event, ui) {
+                    _this.autoCompleteChange(ui);
+                },
+                select: function (event, ui) {
+                    _this.autoCompleteSelect(ui);
                 }
             });
         }
@@ -147,12 +245,24 @@ var AutoCompleteDirective = /** @class */ (function () {
                     listData.push(item[_this.filterName]);
                 });
                 $(id).autocomplete({
-                    source: list != undefined ? list : listData
+                    source: list != undefined ? list : listData,
+                    change: function (event, ui) {
+                        _this.autoCompleteChange(ui);
+                    },
+                    select: function (event, ui) {
+                        _this.autoCompleteSelect(ui);
+                    }
                 });
             }
             else {
                 $(id).autocomplete({
-                    source: list != undefined ? list : this.listShown
+                    source: list != undefined ? list : this.listShown,
+                    change: function (event, ui) {
+                        _this.autoCompleteChange(ui);
+                    },
+                    select: function (event, ui) {
+                        _this.autoCompleteSelect(ui);
+                    }
                 });
             }
         }
@@ -172,49 +282,45 @@ var AutoCompleteDirective = /** @class */ (function () {
     AutoCompleteDirective.prototype.activateEvents = function () {
         var _this = this;
         var that = this;
-        var id = "#" + that.inpRef["id"];
-        $(id)
-            .on("autocompleteselect", function (event, ui) {
-            //for ngmodule                
-            if (that.searchfromList(ui)) {
-                that.ngModelChange.emit(ui.item.value);
-                that.valueChanged.emit(ui.item.value);
-            }
-            else {
-                that.ngModelChange.emit("");
-                that.valueChanged.emit("");
-            }
-            // for Rectiveforms model
-            if (that.reactiveFormControl) {
-                if (that.searchfromList(ui)) {
-                    that.reactiveFormControl.control.setValue(ui.item.value);
-                }
-                else {
-                    that.reactiveFormControl.control.setValue("");
-                }
-            }
-        });
-        $(id)
-            .on("autocompletechange", function (event, ui) {
-            //for ngmodule
-            if (that.searchfromList(ui)) {
-                that.ngModelChange.emit(that.elemRef.nativeElement["value"]);
-                that.valueChanged.emit(that.elemRef.nativeElement["value"]);
-            }
-            else {
-                that.ngModelChange.emit("");
-                that.valueChanged.emit("");
-            }
-            // for Rectiveforms model
-            if (that.reactiveFormControl) {
-                if (that.searchfromList(ui)) {
-                    that.reactiveFormControl.control.setValue(that.elemRef.nativeElement["value"]);
-                }
-                else {
-                    that.reactiveFormControl.control.setValue("");
-                }
-            }
-        });
+        // var id = `#${that.inpRef["id"]}`;
+        // $("#city")
+        //     .on("autocompleteselect", function (event: any, ui: any) {
+        //         //for ngmodule                
+        //         if (that.searchfromList(ui)) {
+        //             that.ngModelChange.emit(ui.item.value);
+        //             that.valueChanged.emit(ui.item.value);
+        //         } else {
+        //             that.ngModelChange.emit("");
+        //             that.valueChanged.emit("");
+        //         }
+        //         // for Rectiveforms model
+        //         if (that.reactiveFormControl) {
+        //             if (that.searchfromList(ui)) {
+        //                 that.reactiveFormControl.control.setValue(ui.item.value);
+        //             } else {
+        //                 that.reactiveFormControl.control.setValue("");
+        //             }
+        //         }
+        //     });
+        // $("#city")
+        //     .on("autocompletechange", function (event: any, ui: any) {
+        //         //for ngmodule
+        //         if (that.searchfromList(ui)) {
+        //             that.ngModelChange.emit(that.elemRef.nativeElement["value"]);
+        //             that.valueChanged.emit(that.elemRef.nativeElement["value"]);
+        //         } else {
+        //             that.ngModelChange.emit("");
+        //             that.valueChanged.emit("");
+        //         }
+        //         // for Rectiveforms model
+        //         if (that.reactiveFormControl) {
+        //             if (that.searchfromList(ui)) {
+        //                 that.reactiveFormControl.control.setValue(that.elemRef.nativeElement["value"]);
+        //             } else {
+        //                 that.reactiveFormControl.control.setValue("");
+        //             }
+        //         }
+        //     });
         rxjs.Observable.fromEvent(this.elemRef.nativeElement, 'keyup')
             .subscribe(function (e) {
             _this.removeOldList();

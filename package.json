@@ -1,6 +1,6 @@
 {
   "name": "ng4-auto-complete",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "An Auto-Complete Module for Angular 4 with extended features and make life easy.",
   "main": "index.js",
   "typings": "index.d.ts",

@@ -39,6 +39,7 @@ export class AutoCompleteDirective implements OnInit {
     ) {
         this.inpRef = elemRef.nativeElement;
         this.renderer.setAttribute(this.inpRef, "spellcheck", "false");
+        this.getDataFromService();        
         this.activateEvents();
     }
 
@@ -47,28 +48,79 @@ export class AutoCompleteDirective implements OnInit {
         this.configureDirective();
     }
 
+    getDataFromService() {
+        if (this.autoCompleteService.dataPresent) {
+            this.list = this.autoCompleteService.list;
+            this.wordTrigger = this.autoCompleteService.wordTrigger;
+            this.listlength = this.autoCompleteService.listlength;
+            this.filterName = this.autoCompleteService.filterName;
+            this.noRecordPlaceHolder = this.autoCompleteService.noRecordPlaceHolder;
+        }
+    }
+
     @Input('ng4-auto-complete') set autoComplete(list: any) {
         this.list = list ? (list.length ? list : []) : [];
+
         if (this.list.length === 0) {
             console.log('static list found empty');
+        }
+
+        if (list != undefined || list != null) {
+            this.autoCompleteService.list = list;
+            this.autoCompleteService.dataPresent = true;
+        } else {
+            this.list = this.autoCompleteService.list;
         }
     }
 
     @Input('word-trigger') set openOnWordLength(word_trigger: number) {
         this.wordTrigger = Number(word_trigger);
+        this.autoCompleteService.wordTrigger = this.wordTrigger;
+
+        if (word_trigger != undefined || word_trigger != null) {
+            this.autoCompleteService.wordTrigger = Number(word_trigger);
+            this.autoCompleteService.dataPresent = true;
+        } else {
+            this.wordTrigger = this.autoCompleteService.wordTrigger;
+        }
     }
 
     @Input('list-length') set listLengthToShow(listlength: number) {
         this.listlength = Number(listlength);
+
+        if (listlength != undefined || listlength != null) {
+            this.autoCompleteService.listlength = Number(listlength);
+            this.autoCompleteService.dataPresent = true;
+
+        } else {
+            this.listlength = this.autoCompleteService.listlength;
+        }
     }
 
     @Input('filterName') set filterIdentity(filterName: string) {
         this.filterName = filterName;
+
+        if (filterName != undefined || filterName != null) {
+            this.autoCompleteService.filterName = filterName;
+            this.autoCompleteService.dataPresent = true;
+
+        } else {
+            this.filterName = this.autoCompleteService.filterName;
+        }
     }
 
     @Input('no-record-text') set noRecordText(defaultText: string) {
         this.noRecordPlaceHolder = defaultText;
+
+        if (defaultText != undefined || defaultText != null) {
+            this.autoCompleteService.noRecordPlaceHolder = defaultText;
+            this.autoCompleteService.dataPresent = true;
+        } else {
+            this.noRecordPlaceHolder = this.autoCompleteService.noRecordPlaceHolder;
+        }
     }
+
+
 
 
     configureListType() {
@@ -123,6 +175,54 @@ export class AutoCompleteDirective implements OnInit {
         return that.listShown;
     }
 
+    autoCompleteSelect(ui: any) {
+        var that = this;
+        let dataFromList = that.searchfromList(ui);
+        //for ngmodule                
+        if (dataFromList) {
+            that.ngModelChange.emit(ui.item.value);
+            that.valueChanged.emit(ui.item.value);
+        } else {
+            that.ngModelChange.emit("");
+            that.valueChanged.emit("");
+        }
+
+        // for Rectiveforms model
+        if (that.reactiveFormControl) {
+            if (dataFromList) {
+                that.reactiveFormControl.control.setValue(ui.item.value);
+            } else {
+                that.reactiveFormControl.control.setValue("");
+            }
+        }
+
+    }
+
+    autoCompleteChange(ui: any) {
+
+        var that = this;
+        let dataFromList = that.searchfromList(ui);
+
+        //for ngmodule
+        if (dataFromList) {
+            that.ngModelChange.emit(that.elemRef.nativeElement["value"]);
+            that.valueChanged.emit(that.elemRef.nativeElement["value"]);
+
+        } else {
+            that.ngModelChange.emit("");
+            that.valueChanged.emit("");
+        }
+
+        // for Rectiveforms model
+        if (that.reactiveFormControl) {
+            if (dataFromList) {
+                that.reactiveFormControl.control.setValue(that.elemRef.nativeElement["value"]);
+            } else {
+                that.reactiveFormControl.control.setValue("");
+            }
+        }
+
+    }
 
     initDropdown(list: any = undefined) {
 
@@ -142,6 +242,12 @@ export class AutoCompleteDirective implements OnInit {
                     response(that.listShown, function (val: any) {
                         console.log(val);
                     });
+                },
+                change: (event: any, ui: any) => {
+                    this.autoCompleteChange(ui);
+                },
+                select: (event: any, ui: any) => {
+                    this.autoCompleteSelect(ui);
                 }
             })
 
@@ -154,12 +260,24 @@ export class AutoCompleteDirective implements OnInit {
                 });
 
                 $(id).autocomplete({
-                    source: list != undefined ? list : listData
+                    source: list != undefined ? list : listData,
+                    change: (event: any, ui: any) => {
+                        this.autoCompleteChange(ui);
+                    },
+                    select: (event: any, ui: any) => {
+                        this.autoCompleteSelect(ui);
+                    }
                 });
 
             } else {
                 $(id).autocomplete({
-                    source: list != undefined ? list : this.listShown
+                    source: list != undefined ? list : this.listShown,
+                    change: (event: any, ui: any) => {
+                        this.autoCompleteChange(ui);
+                    },
+                    select: (event: any, ui: any) => {
+                        this.autoCompleteSelect(ui);
+                    }
                 });
             }
 
@@ -184,54 +302,54 @@ export class AutoCompleteDirective implements OnInit {
 
     activateEvents() {
         var that = this;
-        var id = `#${that.inpRef["id"]}`;
+        // var id = `#${that.inpRef["id"]}`;
 
-        $(id)
-            .on("autocompleteselect", function (event: any, ui: any) {
+        // $("#city")
+        //     .on("autocompleteselect", function (event: any, ui: any) {
 
-                //for ngmodule                
-                if (that.searchfromList(ui)) {
-                    that.ngModelChange.emit(ui.item.value);
-                    that.valueChanged.emit(ui.item.value);
-                } else {
-                    that.ngModelChange.emit("");
-                    that.valueChanged.emit("");
-                }
+        //         //for ngmodule                
+        //         if (that.searchfromList(ui)) {
+        //             that.ngModelChange.emit(ui.item.value);
+        //             that.valueChanged.emit(ui.item.value);
+        //         } else {
+        //             that.ngModelChange.emit("");
+        //             that.valueChanged.emit("");
+        //         }
 
-                // for Rectiveforms model
-                if (that.reactiveFormControl) {
-                    if (that.searchfromList(ui)) {
-                        that.reactiveFormControl.control.setValue(ui.item.value);
-                    } else {
-                        that.reactiveFormControl.control.setValue("");
-                    }
-                }
+        //         // for Rectiveforms model
+        //         if (that.reactiveFormControl) {
+        //             if (that.searchfromList(ui)) {
+        //                 that.reactiveFormControl.control.setValue(ui.item.value);
+        //             } else {
+        //                 that.reactiveFormControl.control.setValue("");
+        //             }
+        //         }
 
-            });
+        //     });
 
-        $(id)
-            .on("autocompletechange", function (event: any, ui: any) {
+        // $("#city")
+        //     .on("autocompletechange", function (event: any, ui: any) {
 
-                //for ngmodule
-                if (that.searchfromList(ui)) {
-                    that.ngModelChange.emit(that.elemRef.nativeElement["value"]);
-                    that.valueChanged.emit(that.elemRef.nativeElement["value"]);
+        //         //for ngmodule
+        //         if (that.searchfromList(ui)) {
+        //             that.ngModelChange.emit(that.elemRef.nativeElement["value"]);
+        //             that.valueChanged.emit(that.elemRef.nativeElement["value"]);
 
-                } else {
-                    that.ngModelChange.emit("");
-                    that.valueChanged.emit("");
-                }
+        //         } else {
+        //             that.ngModelChange.emit("");
+        //             that.valueChanged.emit("");
+        //         }
 
-                // for Rectiveforms model
-                if (that.reactiveFormControl) {
-                    if (that.searchfromList(ui)) {
-                        that.reactiveFormControl.control.setValue(that.elemRef.nativeElement["value"]);
-                    } else {
-                        that.reactiveFormControl.control.setValue("");
-                    }
-                }
+        //         // for Rectiveforms model
+        //         if (that.reactiveFormControl) {
+        //             if (that.searchfromList(ui)) {
+        //                 that.reactiveFormControl.control.setValue(that.elemRef.nativeElement["value"]);
+        //             } else {
+        //                 that.reactiveFormControl.control.setValue("");
+        //             }
+        //         }
 
-            });
+        //     });
 
         Observable.fromEvent(this.elemRef.nativeElement, 'keyup')
             .subscribe((e: any) => {
@@ -254,7 +372,7 @@ export class AutoCompleteDirective implements OnInit {
                 that.initDropdown();
             });
 
-            this.autoCompleteService.settingDynamicList
+        this.autoCompleteService.settingDynamicList
             .subscribe(bool => {
                 if (bool) {
                     this.list = this.autoCompleteService.list;

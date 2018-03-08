@@ -19,6 +19,7 @@ export declare class AutoCompleteDirective implements OnInit {
     dropdownInitiated: boolean;
     constructor(elemRef: ElementRef, renderer: Renderer2, autoCompleteService: AutoCompleteService, reactiveFormControl: NgControl);
     ngOnInit(): void;
+    getDataFromService(): void;
     autoComplete: any;
     openOnWordLength: number;
     listLengthToShow: number;
@@ -27,6 +28,8 @@ export declare class AutoCompleteDirective implements OnInit {
     configureListType(): void;
     configureDirective(): void;
     filterList(): any;
+    autoCompleteSelect(ui: any): void;
+    autoCompleteChange(ui: any): void;
     initDropdown(list?: any): void;
     searchfromList(ui: any): any;
     activateEvents(): void;
