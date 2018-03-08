@@ -1,8 +1,10 @@
 import { ElementRef, Renderer2, OnInit, EventEmitter } from "@angular/core";
 import { NgControl } from "@angular/forms";
+import { AutoCompleteService } from "./auto.service";
 export declare class AutoCompleteDirective implements OnInit {
     elemRef: ElementRef;
     renderer: Renderer2;
+    autoCompleteService: AutoCompleteService;
     reactiveFormControl: NgControl;
     ngModelChange: EventEmitter<{}>;
     valueChanged: EventEmitter<{}>;
@@ -15,7 +17,7 @@ export declare class AutoCompleteDirective implements OnInit {
     listShown: any;
     inpRef: any;
     dropdownInitiated: boolean;
-    constructor(elemRef: ElementRef, renderer: Renderer2, reactiveFormControl: NgControl);
+    constructor(elemRef: ElementRef, renderer: Renderer2, autoCompleteService: AutoCompleteService, reactiveFormControl: NgControl);
     ngOnInit(): void;
     autoComplete: any;
     openOnWordLength: number;
@@ -28,5 +30,6 @@ export declare class AutoCompleteDirective implements OnInit {
     initDropdown(list?: any): void;
     searchfromList(ui: any): any;
     activateEvents(): void;
+    restartDirective(): void;
     removeOldList(): void;
 }

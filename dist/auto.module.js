@@ -1,4 +1,5 @@
 import { AutoCompleteDirective } from "./auto.directive";
+import { AutoCompleteService } from "./auto.service";
 import { NgModule } from "@angular/core";
 var AutoCompleteModule = /** @class */ (function () {
     function AutoCompleteModule() {
@@ -6,7 +7,8 @@ var AutoCompleteModule = /** @class */ (function () {
     AutoCompleteModule.decorators = [
         { type: NgModule, args: [{
                     declarations: [AutoCompleteDirective],
-                    exports: [AutoCompleteDirective]
+                    exports: [AutoCompleteDirective],
+                    providers: [AutoCompleteService]
                 },] },
     ];
     /** @nocollapse */

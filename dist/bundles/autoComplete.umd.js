@@ -4,16 +4,39 @@
 	(factory((global.ng = global.ng || {}, global.ng.autoComplete = {}),global.ng.core,global.rxjs,global.ng.forms));
 }(this, (function (exports,core,rxjs,forms) { 'use strict';
 
+var AutoCompleteService = /** @class */ (function () {
+    function AutoCompleteService() {
+        this.list = [];
+        this.settingDynamicList = new rxjs.BehaviorSubject(false);
+    }
+    AutoCompleteService.prototype.setDynamicList = function (list) {
+        if (list.length === 0) {
+            console.log('dynamic list found empty');
+            return;
+        }
+        this.list = list;
+        this.settingDynamicList.next(true);
+    };
+    AutoCompleteService.decorators = [
+        { type: core.Injectable },
+    ];
+    /** @nocollapse */
+    AutoCompleteService.ctorParameters = function () { return []; };
+    return AutoCompleteService;
+}());
+
 var AutoCompleteDirective = /** @class */ (function () {
-    function AutoCompleteDirective(elemRef, renderer, reactiveFormControl) {
+    function AutoCompleteDirective(elemRef, renderer, autoCompleteService, reactiveFormControl) {
         this.elemRef = elemRef;
         this.renderer = renderer;
+        this.autoCompleteService = autoCompleteService;
         this.reactiveFormControl = reactiveFormControl;
         this.ngModelChange = new core.EventEmitter(); // for normal model change
         this.valueChanged = new core.EventEmitter(); // for normal value change
         this.listlength = 15;
         this.dropdownInitiated = false;
         this.inpRef = elemRef.nativeElement;
+        this.renderer.setAttribute(this.inpRef, "spellcheck", "false");
         this.activateEvents();
     }
     AutoCompleteDirective.prototype.ngOnInit = function () {
@@ -23,6 +46,9 @@ var AutoCompleteDirective = /** @class */ (function () {
     Object.defineProperty(AutoCompleteDirective.prototype, "autoComplete", {
         set: function (list) {
             this.list = list ? (list.length ? list : []) : [];
+            if (this.list.length === 0) {
+                console.log('static list found empty');
+            }
         },
         enumerable: true,
         configurable: true
@@ -204,6 +230,17 @@ var AutoCompleteDirective = /** @class */ (function () {
             }
             that.initDropdown();
         });
+        this.autoCompleteService.settingDynamicList
+            .subscribe(function (bool) {
+            if (bool) {
+                _this.list = _this.autoCompleteService.list;
+                _this.restartDirective();
+            }
+        });
+    };
+    AutoCompleteDirective.prototype.restartDirective = function () {
+        this.configureListType();
+        this.configureDirective();
     };
     AutoCompleteDirective.prototype.removeOldList = function () {
         this.initDropdown([]);
@@ -217,6 +254,7 @@ var AutoCompleteDirective = /** @class */ (function () {
     AutoCompleteDirective.ctorParameters = function () { return [
         { type: core.ElementRef, },
         { type: core.Renderer2, },
+        { type: AutoCompleteService, },
         { type: forms.NgControl, decorators: [{ type: core.Optional },] },
     ]; };
     AutoCompleteDirective.propDecorators = {
@@ -237,7 +275,8 @@ var AutoCompleteModule = /** @class */ (function () {
     AutoCompleteModule.decorators = [
         { type: core.NgModule, args: [{
                     declarations: [AutoCompleteDirective],
-                    exports: [AutoCompleteDirective]
+                    exports: [AutoCompleteDirective],
+                    providers: [AutoCompleteService]
                 },] },
     ];
     /** @nocollapse */
@@ -246,6 +285,7 @@ var AutoCompleteModule = /** @class */ (function () {
 }());
 
 exports.AutoCompleteModule = AutoCompleteModule;
+exports.AutoCompleteService = AutoCompleteService;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 

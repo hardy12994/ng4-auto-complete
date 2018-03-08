@@ -10,6 +10,7 @@ import {
 } from "@angular/core";
 import { Observable } from "rxjs";
 import { NgControl } from "@angular/forms";
+import { AutoCompleteService } from "./auto.service";
 
 declare const $: any;
 
@@ -33,9 +34,11 @@ export class AutoCompleteDirective implements OnInit {
 
     constructor(public elemRef: ElementRef,
         public renderer: Renderer2,
+        public autoCompleteService: AutoCompleteService,
         @Optional() public reactiveFormControl: NgControl
     ) {
         this.inpRef = elemRef.nativeElement;
+        this.renderer.setAttribute(this.inpRef, "spellcheck", "false");
         this.activateEvents();
     }
 
@@ -46,6 +49,9 @@ export class AutoCompleteDirective implements OnInit {
 
     @Input('ng4-auto-complete') set autoComplete(list: any) {
         this.list = list ? (list.length ? list : []) : [];
+        if (this.list.length === 0) {
+            console.log('static list found empty');
+        }
     }
 
     @Input('word-trigger') set openOnWordLength(word_trigger: number) {
@@ -246,7 +252,20 @@ export class AutoCompleteDirective implements OnInit {
 
                 }
                 that.initDropdown();
-            })
+            });
+
+            this.autoCompleteService.settingDynamicList
+            .subscribe(bool => {
+                if (bool) {
+                    this.list = this.autoCompleteService.list;
+                    this.restartDirective();
+                }
+            });
+    }
+
+    restartDirective() {
+        this.configureListType();
+        this.configureDirective();
     }
 
     removeOldList() {

@@ -1,16 +1,19 @@
 import { Directive, ElementRef, Input, Renderer2, EventEmitter, Output, Optional } from "@angular/core";
 import { Observable } from "rxjs";
 import { NgControl } from "@angular/forms";
+import { AutoCompleteService } from "./auto.service";
 var AutoCompleteDirective = /** @class */ (function () {
-    function AutoCompleteDirective(elemRef, renderer, reactiveFormControl) {
+    function AutoCompleteDirective(elemRef, renderer, autoCompleteService, reactiveFormControl) {
         this.elemRef = elemRef;
         this.renderer = renderer;
+        this.autoCompleteService = autoCompleteService;
         this.reactiveFormControl = reactiveFormControl;
         this.ngModelChange = new EventEmitter(); // for normal model change
         this.valueChanged = new EventEmitter(); // for normal value change
         this.listlength = 15;
         this.dropdownInitiated = false;
         this.inpRef = elemRef.nativeElement;
+        this.renderer.setAttribute(this.inpRef, "spellcheck", "false");
         this.activateEvents();
     }
     AutoCompleteDirective.prototype.ngOnInit = function () {
@@ -20,6 +23,9 @@ var AutoCompleteDirective = /** @class */ (function () {
     Object.defineProperty(AutoCompleteDirective.prototype, "autoComplete", {
         set: function (list) {
             this.list = list ? (list.length ? list : []) : [];
+            if (this.list.length === 0) {
+                console.log('static list found empty');
+            }
         },
         enumerable: true,
         configurable: true
@@ -202,6 +208,17 @@ var AutoCompleteDirective = /** @class */ (function () {
             }
             that.initDropdown();
         });
+        this.autoCompleteService.settingDynamicList
+            .subscribe(function (bool) {
+            if (bool) {
+                _this.list = _this.autoCompleteService.list;
+                _this.restartDirective();
+            }
+        });
+    };
+    AutoCompleteDirective.prototype.restartDirective = function () {
+        this.configureListType();
+        this.configureDirective();
     };
     AutoCompleteDirective.prototype.removeOldList = function () {
         this.initDropdown([]);
@@ -215,6 +232,7 @@ var AutoCompleteDirective = /** @class */ (function () {
     AutoCompleteDirective.ctorParameters = function () { return [
         { type: ElementRef, },
         { type: Renderer2, },
+        { type: AutoCompleteService, },
         { type: NgControl, decorators: [{ type: Optional },] },
     ]; };
     AutoCompleteDirective.propDecorators = {

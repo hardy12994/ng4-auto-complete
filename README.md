@@ -129,6 +129,30 @@ filterName="name" no-record-text="No Records Found!" >
 ```
 
 
+
+## Set Dynamic List -
+
+For Dynamic List we can *inject* the Service i.e `AutoCompleteService`
+
+in your component and set it when you get the list like this -
+
+
+```sh
+  import { AutoCompleteService } from 'ng4-auto-complete';
+  
+  export class YourComponent{ 
+
+      constructor(public autoCompleteService: AutoCompleteService){ }
+
+      //call this method when you get list from *any* side
+      setList(list){
+          this.autoCompleteService.setDynamicList(list);
+          // this will log in console if your list is empty.
+      }
+  }
+
+```
+
 NOTE -
 ------
 
