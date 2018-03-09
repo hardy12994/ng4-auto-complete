@@ -144,10 +144,35 @@ in your component and set it when you get the list like this -
 
       constructor(public autoCompleteService: AutoCompleteService){ }
 
-      //call this method when you get list from *any* side
+      //call this method when you get list from anywhere
       setList(list){
           this.autoCompleteService.setDynamicList(list);
           // this will log in console if your list is empty.
+      }
+  }
+
+```
+
+
+## Update List -
+
+For Update List we can *inject* the Service i.e `AutoCompleteService`
+
+in your component and set it when you get the list like this -
+
+
+```sh
+  import { AutoCompleteService } from 'ng4-auto-complete';
+  
+  export class YourComponent{ 
+
+      constructor(public autoCompleteService: AutoCompleteService){ }
+
+      //call this method when you want to update list from anywhere
+      //elementId ,is the id od input tag which you want to change
+
+      updateList(list,elementId){
+         this.autoCompleteService.updateList(list, elementId);
       }
   }
 

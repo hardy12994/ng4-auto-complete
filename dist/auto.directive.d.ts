@@ -28,9 +28,9 @@ export declare class AutoCompleteDirective implements OnInit {
     configureListType(): void;
     configureDirective(): void;
     filterList(): any;
-    autoCompleteSelect(ui: any): void;
-    autoCompleteChange(ui: any): void;
-    initDropdown(list?: any): void;
+    autoCompleteSelect(event: any, ui: any): void;
+    autoCompleteChange(event: any, ui: any): void;
+    initDropdown(list?: any, updatedListId?: any): void;
     searchfromList(ui: any): any;
     activateEvents(): void;
     restartDirective(): void;

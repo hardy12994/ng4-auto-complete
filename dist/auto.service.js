@@ -6,6 +6,7 @@ var AutoCompleteService = /** @class */ (function () {
         this.dataPresent = false;
         this.list = [];
         this.settingDynamicList = new BehaviorSubject(false);
+        this.updatingList = new BehaviorSubject(false);
     }
     AutoCompleteService.prototype.setDynamicList = function (list) {
         if (list.length === 0) {
@@ -14,6 +15,13 @@ var AutoCompleteService = /** @class */ (function () {
         }
         this.list = list;
         this.settingDynamicList.next(true);
+    };
+    AutoCompleteService.prototype.updateList = function (list, id) {
+        if (list == undefined || list == null)
+            return;
+        this.updatedListId = id;
+        this.updatedList = list;
+        this.updatingList.next(true);
     };
     AutoCompleteService.decorators = [
         { type: Injectable },

@@ -145,10 +145,11 @@ var AutoCompleteDirective = /** @class */ (function () {
         }
         return that.listShown;
     };
-    AutoCompleteDirective.prototype.autoCompleteSelect = function (ui) {
+    AutoCompleteDirective.prototype.autoCompleteSelect = function (event, ui) {
         var that = this;
         var dataFromList = that.searchfromList(ui);
-        //for ngmodule                
+        var id = "#" + event.target.id;
+        //for ngmodule
         if (dataFromList) {
             that.ngModelChange.emit(ui.item.value);
             that.valueChanged.emit(ui.item.value);
@@ -156,6 +157,9 @@ var AutoCompleteDirective = /** @class */ (function () {
         else {
             that.ngModelChange.emit("");
             that.valueChanged.emit("");
+            setTimeout(function () {
+                $(id).val("");
+            }, 0);
         }
         // for Rectiveforms model
         if (that.reactiveFormControl) {
@@ -167,9 +171,10 @@ var AutoCompleteDirective = /** @class */ (function () {
             }
         }
     };
-    AutoCompleteDirective.prototype.autoCompleteChange = function (ui) {
+    AutoCompleteDirective.prototype.autoCompleteChange = function (event, ui) {
         var that = this;
         var dataFromList = that.searchfromList(ui);
+        var id = "#" + event.target.id;
         //for ngmodule
         if (dataFromList) {
             that.ngModelChange.emit(that.elemRef.nativeElement["value"]);
@@ -178,6 +183,9 @@ var AutoCompleteDirective = /** @class */ (function () {
         else {
             that.ngModelChange.emit("");
             that.valueChanged.emit("");
+            setTimeout(function () {
+                $(id).val("");
+            }, 0);
         }
         // for Rectiveforms model
         if (that.reactiveFormControl) {
@@ -189,28 +197,23 @@ var AutoCompleteDirective = /** @class */ (function () {
             }
         }
     };
-    AutoCompleteDirective.prototype.initDropdown = function (list) {
+    AutoCompleteDirective.prototype.initDropdown = function (list, updatedListId) {
         var _this = this;
         if (list === void 0) { list = undefined; }
-        var id = "#" + this.inpRef["id"];
+        if (updatedListId === void 0) { updatedListId = null; }
+        var id = updatedListId || "#" + this.inpRef["id"];
         if (this.noRecordPlaceHolder &&
             list === undefined &&
             this.listShown.length === 1 &&
             this.listShown[0] === this.noRecordPlaceHolder) {
             var that = this;
-            var id = "#" + that.inpRef["id"];
             $(id).autocomplete({
+                // disabled: true,
                 source: function (request, response) {
                     var matcher = new RegExp(that.noRecordPlaceHolder, "i");
                     response(that.listShown, function (val) {
                         console.log(val);
                     });
-                },
-                change: function (event, ui) {
-                    _this.autoCompleteChange(ui);
-                },
-                select: function (event, ui) {
-                    _this.autoCompleteSelect(ui);
                 }
             });
         }
@@ -223,10 +226,10 @@ var AutoCompleteDirective = /** @class */ (function () {
                 $(id).autocomplete({
                     source: list != undefined ? list : listData,
                     change: function (event, ui) {
-                        _this.autoCompleteChange(ui);
+                        _this.autoCompleteChange(event, ui);
                     },
                     select: function (event, ui) {
-                        _this.autoCompleteSelect(ui);
+                        _this.autoCompleteSelect(event, ui);
                     }
                 });
             }
@@ -234,10 +237,10 @@ var AutoCompleteDirective = /** @class */ (function () {
                 $(id).autocomplete({
                     source: list != undefined ? list : this.listShown,
                     change: function (event, ui) {
-                        _this.autoCompleteChange(ui);
+                        _this.autoCompleteChange(event, ui);
                     },
                     select: function (event, ui) {
-                        _this.autoCompleteSelect(ui);
+                        _this.autoCompleteSelect(event, ui);
                     }
                 });
             }
@@ -317,6 +320,14 @@ var AutoCompleteDirective = /** @class */ (function () {
             if (bool) {
                 _this.list = _this.autoCompleteService.list;
                 _this.restartDirective();
+            }
+        });
+        this.autoCompleteService.updatingList
+            .subscribe(function (bool) {
+            if (bool) {
+                var updatedList = _this.autoCompleteService.updatedList;
+                var updatedListId = _this.autoCompleteService.updatedListId;
+                _this.initDropdown(updatedList, updatedListId);
             }
         });
     };

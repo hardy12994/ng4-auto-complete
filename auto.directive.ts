@@ -19,7 +19,6 @@ declare const $: any;
 })
 
 export class AutoCompleteDirective implements OnInit {
-
     @Output() ngModelChange = new EventEmitter(); // for normal model change
     @Output() valueChanged = new EventEmitter();  // for normal value change
     noRecordPlaceHolder: string;
@@ -39,7 +38,7 @@ export class AutoCompleteDirective implements OnInit {
     ) {
         this.inpRef = elemRef.nativeElement;
         this.renderer.setAttribute(this.inpRef, "spellcheck", "false");
-        this.getDataFromService();        
+        this.getDataFromService();
         this.activateEvents();
     }
 
@@ -68,6 +67,7 @@ export class AutoCompleteDirective implements OnInit {
         if (list != undefined || list != null) {
             this.autoCompleteService.list = list;
             this.autoCompleteService.dataPresent = true;
+
         } else {
             this.list = this.autoCompleteService.list;
         }
@@ -80,6 +80,7 @@ export class AutoCompleteDirective implements OnInit {
         if (word_trigger != undefined || word_trigger != null) {
             this.autoCompleteService.wordTrigger = Number(word_trigger);
             this.autoCompleteService.dataPresent = true;
+
         } else {
             this.wordTrigger = this.autoCompleteService.wordTrigger;
         }
@@ -115,12 +116,11 @@ export class AutoCompleteDirective implements OnInit {
         if (defaultText != undefined || defaultText != null) {
             this.autoCompleteService.noRecordPlaceHolder = defaultText;
             this.autoCompleteService.dataPresent = true;
+
         } else {
             this.noRecordPlaceHolder = this.autoCompleteService.noRecordPlaceHolder;
         }
     }
-
-
 
 
     configureListType() {
@@ -175,16 +175,22 @@ export class AutoCompleteDirective implements OnInit {
         return that.listShown;
     }
 
-    autoCompleteSelect(ui: any) {
+
+    autoCompleteSelect(event: any, ui: any) {
         var that = this;
         let dataFromList = that.searchfromList(ui);
-        //for ngmodule                
+        let id = `#${event.target.id}`
+
+        //for ngmodule
         if (dataFromList) {
             that.ngModelChange.emit(ui.item.value);
             that.valueChanged.emit(ui.item.value);
         } else {
             that.ngModelChange.emit("");
             that.valueChanged.emit("");
+            setTimeout(() => {
+                $(id).val("");
+            }, 0);
         }
 
         // for Rectiveforms model
@@ -196,12 +202,15 @@ export class AutoCompleteDirective implements OnInit {
             }
         }
 
+
+
     }
 
-    autoCompleteChange(ui: any) {
+    autoCompleteChange(event: any, ui: any) {
 
         var that = this;
         let dataFromList = that.searchfromList(ui);
+        let id = `#${event.target.id}`;
 
         //for ngmodule
         if (dataFromList) {
@@ -211,6 +220,9 @@ export class AutoCompleteDirective implements OnInit {
         } else {
             that.ngModelChange.emit("");
             that.valueChanged.emit("");
+            setTimeout(() => {
+                $(id).val("");
+            }, 0);
         }
 
         // for Rectiveforms model
@@ -224,9 +236,9 @@ export class AutoCompleteDirective implements OnInit {
 
     }
 
-    initDropdown(list: any = undefined) {
+    initDropdown(list: any = undefined, updatedListId: any = null) {
 
-        var id = `#${this.inpRef["id"]}`;
+        var id = updatedListId || `#${this.inpRef["id"]}`;
 
         if (this.noRecordPlaceHolder &&
             list === undefined &&
@@ -234,20 +246,14 @@ export class AutoCompleteDirective implements OnInit {
             this.listShown[0] === this.noRecordPlaceHolder) {
 
             var that = this;
-            var id = `#${that.inpRef["id"]}`;
 
             $(id).autocomplete({
+                // disabled: true,
                 source: function (request: any, response: any) {
                     var matcher = new RegExp(that.noRecordPlaceHolder, "i");
                     response(that.listShown, function (val: any) {
                         console.log(val);
                     });
-                },
-                change: (event: any, ui: any) => {
-                    this.autoCompleteChange(ui);
-                },
-                select: (event: any, ui: any) => {
-                    this.autoCompleteSelect(ui);
                 }
             })
 
@@ -262,10 +268,10 @@ export class AutoCompleteDirective implements OnInit {
                 $(id).autocomplete({
                     source: list != undefined ? list : listData,
                     change: (event: any, ui: any) => {
-                        this.autoCompleteChange(ui);
+                        this.autoCompleteChange(event, ui);
                     },
                     select: (event: any, ui: any) => {
-                        this.autoCompleteSelect(ui);
+                        this.autoCompleteSelect(event, ui);
                     }
                 });
 
@@ -273,10 +279,10 @@ export class AutoCompleteDirective implements OnInit {
                 $(id).autocomplete({
                     source: list != undefined ? list : this.listShown,
                     change: (event: any, ui: any) => {
-                        this.autoCompleteChange(ui);
+                        this.autoCompleteChange(event, ui);
                     },
                     select: (event: any, ui: any) => {
-                        this.autoCompleteSelect(ui);
+                        this.autoCompleteSelect(event, ui);
                     }
                 });
             }
@@ -379,6 +385,16 @@ export class AutoCompleteDirective implements OnInit {
                     this.restartDirective();
                 }
             });
+
+        this.autoCompleteService.updatingList
+            .subscribe(bool => {
+                if (bool) {
+                    var updatedList = this.autoCompleteService.updatedList;
+                    var updatedListId = this.autoCompleteService.updatedListId;
+                    this.initDropdown(updatedList, updatedListId);
+                }
+            });
+
     }
 
     restartDirective() {
